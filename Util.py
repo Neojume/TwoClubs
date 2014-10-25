@@ -9,10 +9,19 @@ import cPickle
 from itertools import chain
 from math import log10
 import numpy as np
+import time
+import struct
 
 # 3rd party libraries
 import networkx as nx
 import BitVector as bv
+
+
+def make_binary(n):
+    if n < 0:
+        return 0
+    else:
+        return 1
 
 
 def write_sets_binary(sets, filename):

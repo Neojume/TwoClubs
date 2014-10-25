@@ -347,7 +347,7 @@ class Master(object):
                 pass
 
 
-class Model(object)
+class Model(object):
 
     '''
     Abstract base class for a parallel tree search model.

@@ -167,13 +167,6 @@ class TwoClubModel(Model):
 
         return self.first_node
 
-# Helper function
-def make_binary(n):
-    if n < 0:
-        return 0
-    else:
-        return 1
-
 
 def find_candidates(G, hubs):
     '''
@@ -231,7 +224,7 @@ def find_clubs(G, hubs):
     write_sets_binary(new_data, 'binary_file.temp')
 
     if sys.platform.startswith('linux'):
-        subprocess.check_call(['ams-cardinality','binary_file.temp'])
+        subprocess.check_call(['./ams-cardinality','binary_file.temp'])
     elif sys.platform.startswith('win'):
         subprocess.check_call(['ams-cardinality.exe','binary_file.temp'])
 

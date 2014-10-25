@@ -35,6 +35,7 @@ find_clubs(G, hubs)
 ```
 
 To obtain the same via the commandline interface you can call
+
     python FindAllClubs.py testgraph.xml 2 2
 
 Note that (for now) only the graphml format is supported via commandline.
