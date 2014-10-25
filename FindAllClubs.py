@@ -19,10 +19,8 @@ import BitVector as bv
 # Own imports
 from MasterHub import Master, Node, Model
 
-from matrix_drop import DROP
+from Util import *
 from Drivers import find_drivers_id
-from write_binary import *
-from sorter import post_process
 
 
 class TwoClubNode(Node):
