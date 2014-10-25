@@ -18,7 +18,7 @@ You can either call the function in a python script or use the commandline inter
 
 In a python script do the following:
 
-<pre><code>
+```python
 import networkx as nx
 
 from FindAllClubs import find_clubs
@@ -32,7 +32,7 @@ hubs = [2, 2]
 
 # Find the actual clubs, results are stored in a .result file.
 find_clubs(G, hubs)
-</code></pre>
+```
 
 To obtain the same via the commandline interface you can call
     python FindAllClubs.py testgraph.xml 2 2
