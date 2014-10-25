@@ -12,6 +12,14 @@ Used libaries
 - WXPython
 - Matplotlib
 
+Other dependencies
+------------------
+We also use the maximality check created by Bayardo and Panda.
+This can be found at https://code.google.com/p/google-extremal-sets/
+
+The code assumes the executable ams-cardinality is put in the same directory 
+as FindAllClubs.py
+
 How to find 2-clubs? 
 --------------------
 You can either call the function in a python script or use the commandline interface.
@@ -57,3 +65,17 @@ The result file is a pickled object and can also be read by a python script.
 License
 -------
 This piece of software is provided as is under the GNU Public license.
+
+Copyright (C) 2012  Steven Laan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/
