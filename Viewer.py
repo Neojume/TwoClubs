@@ -48,6 +48,11 @@ class TwoClubViewer(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
 
         self.club_types = ['Coterie', 'ns-Coterie', 'Social circle', 'Hamlet']
+        self.displayName = {
+                'Coterie': 'Coterie (sep)',
+                'ns-Coterie': 'Coterie (nonsep)',
+                'Social circle': 'Social Circle',
+                'Hamlet': 'Hamlet'}
         self.all_info = None
         self.nt_threshold = 0
         self.club_contents = []
@@ -60,14 +65,14 @@ class TwoClubViewer(wx.Frame):
         # Menu Bar
         self.menubar = wx.MenuBar()
         self.file = wx.Menu()
-        self.open = wx.MenuItem(self.file, wx.NewId(), '&Open\tCtrl-O', 'Open a .result file', wx.ITEM_NORMAL)
+        self.open = wx.MenuItem(self.file, wx.ID_OPEN, '&Open\tCtrl-O', 'Open a .result file', wx.ITEM_NORMAL)
         self.file.AppendItem(self.open)
-        self.quit = wx.MenuItem(self.file, wx.NewId(), 'Quit', 'Exit the program', wx.ITEM_NORMAL)
+        self.quit = wx.MenuItem(self.file, wx.ID_EXIT, 'Quit', 'Exit the program', wx.ITEM_NORMAL)
         self.file.AppendItem(self.quit)
 
         self.edit = wx.Menu()
         self.select_none = wx.MenuItem( self.edit, wx.NewId(), 'Select &None\tCtrl-Shift-A', 'Deselect all nodes', wx.ITEM_NORMAL)
-        self.change_threshold = wx.MenuItem( self.edit, wx.NewId(), 'Change &Threshold', 'Change the nontrivial-threshold', wx.ITEM_NORMAL)
+        self.change_threshold = wx.MenuItem(self.edit, wx.NewId(), 'Change &Threshold', 'Change the nontrivial-threshold', wx.ITEM_NORMAL)
         self.edit.AppendItem(self.select_none)
         self.edit.AppendItem(self.change_threshold)
 
@@ -81,11 +86,16 @@ class TwoClubViewer(wx.Frame):
         self.tools.AppendItem(self.largest_clubs)
         self.tools.AppendItem(self.number_clubs)
 
+        self.view = wx.Menu()
+        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View non-trivials', 'Change the nontrivial-threshold', wx.ITEM_CHECK)
+        self.view.AppendItem(self.view_nontrivials)
+
         self.help = wx.Menu()
 
         self.menubar.Append(self.file, '&File')
         self.menubar.Append(self.edit, '&Edit')
         self.menubar.Append(self.tools, '&Tools')
+        self.menubar.Append(self.view, '&View')
         self.menubar.Append(self.help, '&Help')
         self.SetMenuBar(self.menubar)
         # Menu Bar end
@@ -117,7 +127,7 @@ class TwoClubViewer(wx.Frame):
         # Dictionary containing selection boxes
         self.display_cbs = dict()
         for t in self.club_types:
-            self.display_cbs[t] = wx.CheckBox(self.panel_club_display, -1, t + 's')
+            self.display_cbs[t] = wx.CheckBox(self.panel_club_display, -1, self.displayName[t])
 
         self.panel_diff = DiffPanel(self.nb_club_info)
 
@@ -274,6 +284,7 @@ class TwoClubViewer(wx.Frame):
         self.OnClubsChange()
         print ' '
 
+
     def OnClubsChange(self):
         '''
         Changes the contents of the list control, according to the selected clubs.
@@ -283,7 +294,7 @@ class TwoClubViewer(wx.Frame):
             if self.display_cbs[t].Get3StateValue() == wx.CHK_CHECKED:
                 for club_id in self.display_clubs[t]:
                     size = len(self.all_info['all_clubs'][int( club_id )])
-                    data_dict[int(club_id)] = [club_id, str(size), t]
+                    data_dict[int(club_id)] = [club_id, str(size), self.displayName[t]]
         self.lc_clubs.ChangeData(data_dict)
         self.panel_diff.Clear()
 
