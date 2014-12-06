@@ -87,7 +87,7 @@ class TwoClubViewer(wx.Frame):
         self.tools.AppendItem(self.number_clubs)
 
         self.view = wx.Menu()
-        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View non-trivials', 'Change the nontrivial-threshold', wx.ITEM_CHECK)
+        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View non-trivials', 'Show the nontrivial 2-clubs in the list', wx.ITEM_CHECK)
         self.view.AppendItem(self.view_nontrivials)
 
         self.help = wx.Menu()
@@ -167,6 +167,7 @@ class TwoClubViewer(wx.Frame):
         self.Bind(wx.EVT_MENU, self.LargestClubs, self.largest_clubs)
         self.Bind(wx.EVT_MENU, self.ClubNumber, self.number_clubs)
         self.Bind(wx.EVT_MENU, self.OnThresholdChange, self.change_threshold)
+        self.Bind(wx.EVT_MENU, self.OnCheckbox, self.view_nontrivials)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnNodeSelect, self.clb_nodes)
         #self.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.OnNodeSelect, self.clb_nodes )
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged, self.notebook_BN)
@@ -294,7 +295,8 @@ class TwoClubViewer(wx.Frame):
             if self.display_cbs[t].Get3StateValue() == wx.CHK_CHECKED:
                 for club_id in self.display_clubs[t]:
                     size = len(self.all_info['all_clubs'][int( club_id )])
-                    data_dict[int(club_id)] = [club_id, str(size), self.displayName[t]]
+                    if self.view_nontrivials.IsChecked() or size >= self.nt_threshold:
+                        data_dict[int(club_id)] = [club_id, str(size), self.displayName[t]]
         self.lc_clubs.ChangeData(data_dict)
         self.panel_diff.Clear()
 
@@ -350,6 +352,7 @@ class TwoClubViewer(wx.Frame):
             self.nt_threshold = avg_degree
 
         dlg.Destroy()
+        self.OnClubsChange()
 
     def DrawClub(self, club_id):
         '''
