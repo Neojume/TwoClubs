@@ -77,10 +77,12 @@ class TwoClubViewer(wx.Frame):
         self.coverage = wx.MenuItem(self.tools, wx.NewId(), 'Coverage table', 'Create the coverage table for the different types', wx.ITEM_NORMAL)
         self.largest_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Largest clubs', 'Show largest clubs and maximum degrees', wx.ITEM_NORMAL)
         self.number_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Number of club types', 'Show the number of different club types', wx.ITEM_NORMAL)
+        self.nodes_info = wx.MenuItem(self.tools, wx.NewId(), 'Selected nodes info', 'Show info about the 2-clubs of the selected nodes', wx.ITEM_NORMAL)
         self.tools.AppendItem(self.importance)
         self.tools.AppendItem(self.coverage)
         self.tools.AppendItem(self.largest_clubs)
         self.tools.AppendItem(self.number_clubs)
+        self.tools.AppendItem(self.nodes_info)
 
         self.view = wx.Menu()
         self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View non-trivials', 'Show the nontrivial 2-clubs in the list', wx.ITEM_CHECK)
@@ -162,6 +164,7 @@ class TwoClubViewer(wx.Frame):
         self.Bind(wx.EVT_MENU, self.CoverageTable, self.coverage)
         self.Bind(wx.EVT_MENU, self.LargestClubs, self.largest_clubs)
         self.Bind(wx.EVT_MENU, self.ClubNumber, self.number_clubs)
+        self.Bind(wx.EVT_MENU, self.NodesInfo, self.nodes_info)
         self.Bind(wx.EVT_MENU, self.OnThresholdChange, self.change_threshold)
         self.Bind(wx.EVT_MENU, self.OnCheckbox, self.view_nontrivials)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnNodeSelect, self.clb_nodes)
@@ -434,8 +437,8 @@ class TwoClubViewer(wx.Frame):
         for club_type in CLUB_TYPES:
             data.append([club_type, len(coverage[club_type]) / float(total_len), len(nt_coverage[club_type]) / float(total_len)])
 
-        data.append(['All Coteries', len(coverage['Coterie'] | coverage['ns-Coterie']) / float(total_len),
-                     len(nt_coverage['Coterie'] | nt_coverage['ns-Coterie']) / float(total_len)])
+        data.append(['All Coteries', len(coverage[TYPE_COTERIE_SEP] | coverage[TYPE_COTERIE_NONSEP]) / float(total_len),
+                     len(nt_coverage[TYPE_COTERIE_SEP] | nt_coverage[TYPE_COTERIE_NONSEP]) / float(total_len)])
 
         grid = ClubGrid(f, data)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -507,6 +510,42 @@ class TwoClubViewer(wx.Frame):
         f.SetSizerAndFit(sizer)
         f.Layout()
         f.Show(True)
+
+    def NodesInfo(self, e):
+        f = wx.Frame(self,-1)
+        f.SetTitle('2-clubs for selected nodes')
+
+        nodes = list(self.clb_nodes.GetCheckedStrings())
+
+
+        clubs = dict()
+        clubs['ALL'] = set(self.all_info['all_clubs'].keys())
+        clubs['ANY'] = set()
+
+        data = [['Node'] + CLUB_TYPES + ['Total']]
+
+        for node in nodes:
+            clubs[node] = set(self.all_info['search'][node])
+            clubs['ALL'] &= clubs[node]
+            clubs['ANY'] |= clubs[node]
+
+        for node in nodes + ['ALL', 'ANY']:
+            count = dict()
+            for club_type in CLUB_TYPES:
+                count[club_type] = 0
+
+            for club in clubs[node]:
+                count[self.all_info['club_types'][club]] += 1
+
+            data.append([node] + [count[t] for t in CLUB_TYPES] + [len(clubs[node])])
+
+        grid = ClubGrid(f, data)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(grid, 1, wx.EXPAND, 0)
+        f.SetSizerAndFit(sizer)
+        f.Layout()
+        f.Show(True)
+
 # end of class TwoClubViewer
 
 class CheckListCtrl( wx.ListCtrl, listmix.CheckListCtrlMixin ):
