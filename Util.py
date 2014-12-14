@@ -30,6 +30,12 @@ import struct
 import networkx as nx
 import BitVector as bv
 
+TYPE_COTERIE_SEP = 'Coterie (sep)'
+TYPE_COTERIE_NONSEP = 'Coterie (nonsep)'
+TYPE_SOCIAL_CIRCLE = 'Social circle'
+TYPE_HAMLET = 'Hamlet'
+CLUB_TYPES = [TYPE_COTERIE_SEP, TYPE_COTERIE_NONSEP, TYPE_SOCIAL_CIRCLE, TYPE_HAMLET]
+
 
 def make_binary(n):
     if n < 0:
@@ -142,21 +148,19 @@ def get_club_type(G):
         'Hamlet'
     '''
 
-    A = nx.to_numpy_matrix(G)
+    A = nx.to_numpy_matrix(G.to_undirected())
     A[A >= 1] = 1 # adjacency matrix with no weights
     A[A < 1] = 0  # adjacency matrix with no weights
 
     # Find its type
-    if len(A) - 1 in np.sum(A, 0):
-        if nx.is_biconnected(G):
-            return 'ns-Coterie'
-        else:
-            return 'Coterie'
-
+    if not nx.is_biconnected(G):
+        return TYPE_COTERIE_SEP
+    elif len(A) - 1 in np.sum(A, 0):
+        return TYPE_COTERIE_NONSEP
     elif bool(np.logical_not(np.logical_not(A) * np.logical_not(A)).any()):
-        return 'Social circle'
+        return TYPE_SOCIAL_CIRCLE
     else:
-        return 'Hamlet'
+        return TYPE_HAMLET
 
 
 def post_process(G, sets, index_file):
@@ -185,16 +189,11 @@ def post_process(G, sets, index_file):
     club_types = dict()
 
     results = dict()
-    results['Hamlet'] = []
-    results['Social circle'] = []
-    results['Coterie'] = []
-    results['ns-Coterie'] = []
-
     sizes = dict()
-    sizes['Hamlet'] = dict()
-    sizes['Social circle'] = dict()
-    sizes['Coterie'] = dict()
-    sizes['ns-Coterie'] = dict()
+
+    for c_type in CLUB_TYPES:
+        results[c_type] = []
+        sizes[c_type] = dict()
 
     G_nodes = G.nodes()
 
@@ -241,10 +240,10 @@ def post_process(G, sets, index_file):
             sizes[club_type][size] += 1
 
     # All results have been indexed by type, now sort by size
-    print 'Number of hamlets       :', len(results['Hamlet'])
-    print 'Number of social circles:', len(results['Social circle'])
-    print 'Number of coteries      :', len(results['Coterie'])
-    print 'Number of ns-coteries   :', len(results['ns-Coterie'])
+    print 'Number of hamlets       :', len(results[TYPE_HAMLET])
+    print 'Number of social circles:', len(results[TYPE_SOCIAL_CIRCLE])
+    print 'Number of coteries      :', len(results[TYPE_COTERIE_SEP])
+    print 'Number of ns-coteries   :', len(results[TYPE_COTERIE_NONSEP])
 
     # Create a dictionary containing all the information
     all_info = dict()
