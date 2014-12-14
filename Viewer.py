@@ -35,6 +35,8 @@ from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
     NavigationToolbar2WxAgg as NavigationToolbar
 
+from Util import TYPE_COTERIE_SEP, TYPE_COTERIE_NONSEP, TYPE_SOCIAL_CIRCLE, TYPE_HAMLET, CLUB_TYPES
+
 VERSION = '5.0'
 
 class TwoClubViewer(wx.Frame):
@@ -47,19 +49,13 @@ class TwoClubViewer(wx.Frame):
         kwds['style'] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
 
-        self.club_types = ['Coterie', 'ns-Coterie', 'Social circle', 'Hamlet']
-        self.displayName = {
-                'Coterie': 'Coterie (sep)',
-                'ns-Coterie': 'Coterie (nonsep)',
-                'Social circle': 'Social Circle',
-                'Hamlet': 'Hamlet'}
         self.all_info = None
         self.nt_threshold = 0
         self.club_contents = []
 
         # Dictionary containing the different clubs to display
         self.display_clubs = dict()
-        for t in self.club_types:
+        for t in CLUB_TYPES:
             self.display_clubs[t] = []
 
         # Menu Bar
@@ -126,8 +122,8 @@ class TwoClubViewer(wx.Frame):
 
         # Dictionary containing selection boxes
         self.display_cbs = dict()
-        for t in self.club_types:
-            self.display_cbs[t] = wx.CheckBox(self.panel_club_display, -1, self.displayName[t])
+        for t in CLUB_TYPES:
+            self.display_cbs[t] = wx.CheckBox(self.panel_club_display, -1, t)
 
         self.panel_diff = DiffPanel(self.nb_club_info)
 
@@ -155,7 +151,7 @@ class TwoClubViewer(wx.Frame):
         #self.nb_clubs.SetMinSize( (512,320) )
 
         # Tick all boxes
-        for t in self.club_types:
+        for t in CLUB_TYPES:
             self.display_cbs[t].SetValue(1)
 
         # Bindings of events
@@ -203,7 +199,7 @@ class TwoClubViewer(wx.Frame):
 
         sizer_club_display.Add(self.lc_clubs, 1, wx.EXPAND, 0)
 
-        for t in self.club_types:
+        for t in CLUB_TYPES:
             sizer_cb.Add(self.display_cbs[t], 0, 0, 0)
 
         sizer_club_display.Add(sizer_cb, 0, wx.EXPAND, 0)
@@ -275,7 +271,7 @@ class TwoClubViewer(wx.Frame):
             else:
                 clubs &= set(my_clubs)
 
-        for t in self.club_types:
+        for t in CLUB_TYPES:
             self.display_clubs[t] = []
 
         if clubs != None:
@@ -291,12 +287,12 @@ class TwoClubViewer(wx.Frame):
         Changes the contents of the list control, according to the selected clubs.
         '''
         data_dict = dict()
-        for t in self.club_types:
+        for t in CLUB_TYPES:
             if self.display_cbs[t].Get3StateValue() == wx.CHK_CHECKED:
                 for club_id in self.display_clubs[t]:
                     size = len(self.all_info['all_clubs'][int( club_id )])
                     if self.view_nontrivials.IsChecked() or size >= self.nt_threshold:
-                        data_dict[int(club_id)] = [club_id, str(size), self.displayName[t]]
+                        data_dict[int(club_id)] = [club_id, str(size), t]
         self.lc_clubs.ChangeData(data_dict)
         self.panel_diff.Clear()
 
@@ -324,7 +320,7 @@ class TwoClubViewer(wx.Frame):
     def DisplayAll(self):
         # Display all 2-clubs
         if self.all_info:
-            for t in self.club_types:
+            for t in CLUB_TYPES:
                 self.display_clubs[t] = []
 
                 for club_id in self.all_info['all_clubs']:
@@ -417,7 +413,7 @@ class TwoClubViewer(wx.Frame):
         nt_coverage = dict()
         nt_threshold = self.nt_threshold
 
-        for club_type in self.club_types:
+        for club_type in CLUB_TYPES:
             coverage[club_type] = set()
             nt_coverage[club_type] = set()
 
@@ -435,7 +431,7 @@ class TwoClubViewer(wx.Frame):
         data = [['Club type', 'Coverage', 'Nontrivial Coverage']]
 
         total_len = len(self.all_info['nodes'])
-        for club_type in self.club_types:
+        for club_type in CLUB_TYPES:
             data.append([club_type, len(coverage[club_type]) / float(total_len), len(nt_coverage[club_type]) / float(total_len)])
 
         data.append(['All Coteries', len(coverage['Coterie'] | coverage['ns-Coterie']) / float(total_len),
@@ -455,7 +451,7 @@ class TwoClubViewer(wx.Frame):
         data = [['Club type', 'Largest Size', 'Maximum degree']]
 
         largest = dict()
-        for club_type in self.club_types:
+        for club_type in CLUB_TYPES:
             largest[club_type] = []
 
         for c_id, c_items in self.all_info['all_clubs'].items():
@@ -490,7 +486,7 @@ class TwoClubViewer(wx.Frame):
 
         nt_threshold = self.nt_threshold
 
-        for club_type in self.club_types:
+        for club_type in CLUB_TYPES:
             number[club_type] = 0
             nt_number[club_type] = 0
 
@@ -503,7 +499,7 @@ class TwoClubViewer(wx.Frame):
 
         data = [['Club type', 'Number', 'Nontrivial Number']]
 
-        for club_type in self.club_types:
+        for club_type in CLUB_TYPES:
             data.append([club_type, number[club_type], nt_number[club_type]])
         grid = ClubGrid(f, data)
         sizer = wx.BoxSizer(wx.VERTICAL)
