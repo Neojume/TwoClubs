@@ -98,28 +98,25 @@ def boroughs_via_cycles(G, minlen=3, maxlen=5):
 
     def add_cycle(cycle):
         my_matches = []
-        cycle_set = set(cycle)
+        cycle_graph = nx.Graph()
+        cycle_graph.add_path(cycle)
+        edges_set = set(cycle_graph.edges())
         for borough in boroughs:
-            overlap = cycle_set & borough
-            found = False
-            for node in overlap:
-                for neighbor in G.neighbors(node):
-                    if neighbor in overlap:
-                        my_matches.append(borough)
-                        found = True
-                        break
-                if found:
+            for e in edges_set:
+                if e in borough or (e[1], e[0]) in borough:
+                    my_matches.append(borough)
                     break
         for match in my_matches:
-            cycle_set = cycle_set | match
+            edges_set = edges_set | match
             boroughs.remove(match)
-        if cycle_set not in boroughs:
-            boroughs.append(cycle_set)
+        if edges_set not in boroughs:
+            boroughs.append(edges_set)
 
     path = [] # stack of nodes in current path
     blocked = defaultdict(bool) # vertex: blocked from search?
     B = defaultdict(list) # graph portions that yield no elementary circuit
     boroughs = [] # list to accumulate the circuits found
+    borough_graphs = [] # list to build networkx graphs
 
     # Johnson's algorithm requires some ordering of the nodes.
     # They might not be sortable so we assign an arbitrary ordering.
@@ -142,7 +139,7 @@ def boroughs_via_cycles(G, minlen=3, maxlen=5):
                 B[node][:] = []
             dummy = circuit(startnode, startnode, component)
 
-    return sorted(boroughs, key = len, reverse = True)
+    return sorted(boroughs, key=len, reverse=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -150,6 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', help='The file to put the results in.', default='boroughs_result.pickle')
     parser.add_argument('-t', '--type', help='The type of the output.', default='pickle')
     parser.add_argument('-g', '--graphics', help='Visualize the boroughs.', action='store_true')
+    parser.add_argument('-i', '--individual', help='Visualize individual boroughs', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     args = parser.parse_args()
 
@@ -159,6 +157,7 @@ if __name__ == '__main__':
         print 'starting search (%d nodes)' % len(G.nodes())
     start = time.time()
     boroughs = boroughs_via_cycles(G)
+
     if args.verbose:
         print 'took', time.time() - start, 'seconds'
 
@@ -172,7 +171,9 @@ if __name__ == '__main__':
         filename = os.path.basename(args.output)[:-index]
 
         for i, borough in enumerate(boroughs):
-            writer = nx.GraphMLWriter(graph=nx.subgraph(G, borough))
+            H = nx.Graph()
+            H.add_edges_from(borough)
+            writer = nx.GraphMLWriter(graph=H)
             f = open(filename + str(i) + os.path.extsep + extension, 'w')
             writer.dump(f)
             f.close()
@@ -185,11 +186,16 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
 
         pos = nx.spring_layout(G)
-        for i,b in enumerate(boroughs):
-            H = nx.subgraph(G, b)
+        for i, borough in enumerate(boroughs):
+            H = nx.Graph()
+            H.add_edges_from(borough)
             nx.draw_networkx_edges(H, pos)
-            c=[i]*nx.number_of_nodes(H)
+            c = [i] * nx.number_of_nodes(H)
             nx.draw_networkx_nodes(H, pos, node_color=c, vmin=0, vmax=num_boroughs, cmap=plt.cm.hsv)
             nx.draw_networkx_labels(H, pos)
-        plt.show()
+
+            if args.individual:
+                plt.show()
+        if not args.individual:
+            plt.show()
 

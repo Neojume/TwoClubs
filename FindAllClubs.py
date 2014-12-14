@@ -263,7 +263,8 @@ if __name__ == '__main__':
 
     if args.borough:
         boroughs = pickle.load(open(args.borough))
-        B = G.subgraph(boroughs[args.borough_number])
+        B = nx.Graph()
+        B.add_edges_from(boroughs[args.borough_number])
         find_clubs(B, args.hubs)
     else:
         find_clubs(G, args.hubs)
