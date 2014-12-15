@@ -371,11 +371,11 @@ class TwoClubViewer(wx.Frame):
             nx.draw(H, pos, self.axes, node_color = 'white', node_size = 200)
             club_type = self.all_info['club_types'][club_id]
             size = len(self.club_contents)
-            if club_type in ['Coterie', 'ns-Coterie']:
+            if club_type in [TYPE_COTERIE_SEP, TYPE_COTERIE_NONSEP]:
                 # Find centers
                 nodelist = [node for node in H.nodes() if len(nx.neighbors(H, node)) == (size - 1)]
                 nx.draw_networkx_nodes(H, pos, nodelist, 300, 'gray')
-            elif club_type == 'Social circle':
+            elif club_type == TYPE_SOCIAL_CIRCLE:
                 # Determine central pairs (in a primitive way)
                 central_nodes = set()
                 central_edges = []
