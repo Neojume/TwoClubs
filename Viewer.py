@@ -37,7 +37,7 @@ from matplotlib.backends.backend_wxagg import \
 
 from Util import TYPE_COTERIE_SEP, TYPE_COTERIE_NONSEP, TYPE_SOCIAL_CIRCLE, TYPE_HAMLET, CLUB_TYPES
 
-VERSION = '5.0'
+VERSION = '5.1'
 
 class TwoClubViewer(wx.Frame):
 
@@ -85,8 +85,9 @@ class TwoClubViewer(wx.Frame):
         self.tools.AppendItem(self.nodes_info)
 
         self.view = wx.Menu()
-        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View non-trivials', 'Show the nontrivial 2-clubs in the list', wx.ITEM_CHECK)
+        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View trivials', 'Show the nontrivial 2-clubs in the list', wx.ITEM_CHECK)
         self.view.AppendItem(self.view_nontrivials)
+        self.view_nontrivials.Check()
 
         self.help = wx.Menu()
 
@@ -108,9 +109,12 @@ class TwoClubViewer(wx.Frame):
         self.panel_nodes = wx.Panel(self.notebook_BN, -1)
 
         self.clb_nodes = wx.CheckListBox(self.panel_nodes, -1, choices = [])
+        self.selected_nodes = set([])
         self.lb_boroughs = wx.ListBox(self.panel_boroughs, -1, choices = [])
         self.sizer_n_staticbox = wx.StaticBox(self.panel_nodes, -1, 'Nodes')
         self.sizer_b_staticbox = wx.StaticBox(self.panel_boroughs, -1, 'Boroughs')
+
+        self.nodes_search = wx.TextCtrl(self.panel_nodes, -1)
 
         self.window_all_pane_2 = wx.Panel(self.window_all, -1)
 
@@ -172,6 +176,7 @@ class TwoClubViewer(wx.Frame):
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged, self.notebook_BN)
         self.Bind(wx.EVT_CHECKBOX, self.OnCheckbox)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
+        self.Bind(wx.EVT_TEXT, self.OnNodeSearch)
 
     def __do_layout(self):
 
@@ -191,6 +196,7 @@ class TwoClubViewer(wx.Frame):
         sizer_n = wx.StaticBoxSizer(self.sizer_n_staticbox, wx.VERTICAL)
         sizer_b = wx.StaticBoxSizer(self.sizer_b_staticbox, wx.HORIZONTAL)
 
+        sizer_n.Add(self.nodes_search, 0, wx.EXPAND, 0)
         sizer_n.Add(self.clb_nodes, 1, wx.EXPAND, 0)
         sizer_b.Add(self.lb_boroughs, 1, wx.EXPAND, 0)
         self.panel_nodes.SetSizer(sizer_n)
@@ -208,7 +214,7 @@ class TwoClubViewer(wx.Frame):
         sizer_club_display.Add(sizer_cb, 0, wx.EXPAND, 0)
         self.panel_club_display.SetSizer(sizer_club_display)
         self.window_club_display.SetSplitMode(wx.SPLIT_VERTICAL)
-        self.window_club_display.SplitVertically(self.panel_club_display, self.nb_club_info, 256) #, 524)
+        self.window_club_display.SplitVertically(self.panel_club_display, self.nb_club_info) #, 524)
 
         self.nb_club_info.AddPage(self.tc_club_info, 'Nodes')
         self.nb_club_info.AddPage(self.panel_vis, 'Visualisation')
@@ -219,12 +225,13 @@ class TwoClubViewer(wx.Frame):
 
         sizer_3.Add(self.nb_clubs, 1, wx.EXPAND, 0)
         self.window_all_pane_2.SetSizer(sizer_3)
-        self.window_all.SplitVertically(self.notebook_BN, self.window_all_pane_2, 196)
+        self.window_all.SplitVertically(self.notebook_BN, self.window_all_pane_2, 256) #196)
         sizer_all.Add(self.window_all, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_all)
         sizer_all.Fit(self)
         self.Layout()
-        self.window_club_display.SetSashPosition(256)
+        #self.window_club_display.SetSashPosition(256)
+        self.window_all.SetSashPosition(256)
 
     def OnClose(self, e):
         self.Close(True)
@@ -237,12 +244,10 @@ class TwoClubViewer(wx.Frame):
             filename = dlg.GetFilename()
             dirname = dlg.GetDirectory()
 
-            print dirname
-            print filename
-
             # Clear everything
             self.all_info = dict()
             self.clb_nodes.Clear()
+            self.selected_nodes = set()
             self.panel_diff.Clear()
             self.tc_club_info.Clear()
             self.axes.clear()
@@ -261,13 +266,36 @@ class TwoClubViewer(wx.Frame):
 
         dlg.Destroy()
 
+    def OnNodeSearch(self, e):
+        if e.GetEventObject() != self.nodes_search:
+            return
+
+        text = e.GetEventObject().GetValue().lower()
+
+        self.clb_nodes.Clear()
+        if 'nodes' not in self.all_info:
+            return
+        all_nodes = self.all_info['nodes']
+        if len(text) == 0:
+            self.clb_nodes.AppendItems(all_nodes)
+            self.clb_nodes.SetCheckedStrings(self.selected_nodes)
+        else:
+            matches = []
+            for node in all_nodes:
+                if text in node.lower():
+                    matches.append(node)
+
+            self.clb_nodes.AppendItems(matches)
+            self.clb_nodes.SetCheckedStrings(set(matches) & self.selected_nodes)
+
     def OnNodeSelect(self, e):
         clb = e.GetEventObject()
         nodes = list(clb.GetCheckedStrings())
+        self.selected_nodes |= set(nodes)
 
         clubs = None
 
-        for node in nodes:
+        for node in self.selected_nodes:
             my_clubs = self.all_info['search'][node]
             if clubs == None:
                 clubs = set(my_clubs)
@@ -282,8 +310,6 @@ class TwoClubViewer(wx.Frame):
                 self.display_clubs[self.all_info['club_types'][club_id]].append(str(club_id))
 
         self.OnClubsChange()
-        print ' '
-
 
     def OnClubsChange(self):
         '''
@@ -318,6 +344,7 @@ class TwoClubViewer(wx.Frame):
         for item in self.clb_nodes.Checked:
             self.clb_nodes.Check(item, check = False)
         self.clb_nodes.DeselectAll()
+        self.selected_nodes = set([])
         self.club_contents = []
 
     def DisplayAll(self):
@@ -515,8 +542,11 @@ class TwoClubViewer(wx.Frame):
         f = wx.Frame(self,-1)
         f.SetTitle('2-clubs for selected nodes')
 
-        nodes = list(self.clb_nodes.GetCheckedStrings())
+        #nodes = list(self.clb_nodes.GetCheckedStrings())
+        nodes = list(self.selected_nodes)
 
+        if len(nodes) == 0:
+            return 0
 
         clubs = dict()
         clubs['ALL'] = set(self.all_info['all_clubs'].keys())
@@ -632,8 +662,6 @@ class ClubListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
         e.Skip()
 
     def NumberAndStringSorter(self, node1, node2):
-        #print 'args:', item1, item2
-
         col = self._col
         ascending = self._colSortFlag[col]
 
@@ -746,7 +774,7 @@ class DiffPanel(wx.Panel):
     def OnSearch(self, e):
         # Search for the specified ID
         try:
-            c_id = int(self.text_club.GetLabelText())
+            c_id = int(self.text_club.GetValue())
             other_club = set(self.all_info['all_clubs'][c_id])
 
             all_members = other_club | self.club
