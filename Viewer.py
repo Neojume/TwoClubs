@@ -104,7 +104,6 @@ class TwoClubViewer(wx.Frame):
         self.window_all = wx.SplitterWindow(self, -1, style = wx.SP_3D | wx.SP_BORDER)
 
         self.notebook_BN = wx.Notebook(self.window_all, -1, style = 0)
-        self.panel_all = wx.Panel(self.notebook_BN, -1)
         self.panel_boroughs = wx.Panel(self.notebook_BN, -1 )
         self.panel_nodes = wx.Panel(self.notebook_BN, -1)
 
@@ -202,7 +201,6 @@ class TwoClubViewer(wx.Frame):
         self.panel_nodes.SetSizer(sizer_n)
         self.panel_boroughs.SetSizer(sizer_b)
 
-        self.notebook_BN.AddPage(self.panel_all, 'All')
         self.notebook_BN.AddPage(self.panel_nodes, 'Nodes')
         self.notebook_BN.AddPage(self.panel_boroughs, 'Boroughs')
 
@@ -371,9 +369,10 @@ class TwoClubViewer(wx.Frame):
             self.OnClubsChange()
 
     def OnPageChanged(self, e):
-        self.SelectNone()
-        if e.GetSelection() == 0:
-            self.DisplayAll()
+        pass
+        #self.SelectNone()
+        #if e.GetSelection() == 0:
+        #    self.DisplayAll()
 
     def OnThresholdChange(self, e):
 
@@ -704,6 +703,8 @@ class ClubListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
             self.list_ctrl.SetStringItem(index, 1, data[1])
             self.list_ctrl.SetStringItem(index, 2, data[2])
             self.list_ctrl.SetItemData(index, key)
+
+        self.list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE)
 
 #---------------------------------------------------------------------------
 class ClubGrid(gridlib.Grid): ##, mixins.GridAutoEditMixin):
