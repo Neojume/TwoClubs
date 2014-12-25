@@ -114,7 +114,7 @@ class TwoClubViewer(wx.Frame):
         self.sizer_n_staticbox = wx.StaticBox(self.panel_nodes, -1, 'Nodes')
         self.sizer_b_staticbox = wx.StaticBox(self.panel_boroughs, -1, 'Boroughs')
 
-        self.nodes_search = wx.TextCtrl(self.panel_nodes, -1)
+        self.nodes_search = wx.SearchCtrl(self.panel_nodes, -1)
 
         self.window_all_pane_2 = wx.Panel(self.window_all, -1)
 
@@ -290,8 +290,16 @@ class TwoClubViewer(wx.Frame):
 
     def OnNodeSelect(self, e):
         clb = e.GetEventObject()
-        nodes = list(clb.GetCheckedStrings())
-        self.selected_nodes |= set(nodes)
+        nr = e.GetInt()
+
+        if clb.IsChecked(nr):
+            # Just got checked
+            nodes = list(clb.GetCheckedStrings())
+            self.selected_nodes |= set(nodes)
+
+        else:
+            # Just got unchecked
+            self.selected_nodes.remove(clb.GetString(nr))
 
         clubs = None
 
@@ -310,6 +318,10 @@ class TwoClubViewer(wx.Frame):
                 self.display_clubs[self.all_info['club_types'][club_id]].append(str(club_id))
 
         self.OnClubsChange()
+
+        if len(self.selected_nodes) == 0:
+            self.DisplayAll()
+
 
     def OnClubsChange(self):
         '''
@@ -342,7 +354,7 @@ class TwoClubViewer(wx.Frame):
 
     def SelectNone(self,e=None):
         for item in self.clb_nodes.Checked:
-            self.clb_nodes.Check(item, check = False)
+            self.clb_nodes.Check(item, check=False)
         self.clb_nodes.DeselectAll()
         self.selected_nodes = set([])
         self.club_contents = []
