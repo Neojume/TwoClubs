@@ -73,12 +73,10 @@ class TwoClubViewer(wx.Frame):
         self.edit.AppendItem(self.change_threshold)
 
         self.tools = wx.Menu()
-        self.importance = wx.MenuItem(self.tools, wx.NewId(), 'Importance graph', 'Create an importance graph of the current result file', wx.ITEM_NORMAL)
         self.coverage = wx.MenuItem(self.tools, wx.NewId(), 'Coverage table', 'Create the coverage table for the different types', wx.ITEM_NORMAL)
         self.largest_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Largest clubs', 'Show largest clubs and maximum degrees', wx.ITEM_NORMAL)
         self.number_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Number of club types', 'Show the number of different club types', wx.ITEM_NORMAL)
         self.nodes_info = wx.MenuItem(self.tools, wx.NewId(), 'Selected nodes info', 'Show info about the 2-clubs of the selected nodes', wx.ITEM_NORMAL)
-        self.tools.AppendItem(self.importance)
         self.tools.AppendItem(self.coverage)
         self.tools.AppendItem(self.largest_clubs)
         self.tools.AppendItem(self.number_clubs)
@@ -150,7 +148,7 @@ class TwoClubViewer(wx.Frame):
         self.statusbar.SetStatusWidths([-1])
         self.statusbar.SetStatusText('Load a file to begin', 0)
 
-        self.lb_boroughs.SetMinSize((128,32))
+        #self.lb_boroughs.SetMinSize((128,32))
         #self.panel_club_display.SetMinSize( (224,32) )
         #self.lc_clubs.SetMinSize( (128,32) )
         #self.nb_clubs.SetMinSize( (512,320) )
@@ -163,7 +161,7 @@ class TwoClubViewer(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnOpen, self.open)
         self.Bind(wx.EVT_MENU, self.OnClose, self.quit)
         self.Bind(wx.EVT_MENU, self.SelectNone, self.select_none)
-        self.Bind(wx.EVT_MENU, self.ImportanceGraph, self.importance)
+        #self.Bind(wx.EVT_MENU, self.ImportanceGraph, self.importance)
         self.Bind(wx.EVT_MENU, self.CoverageTable, self.coverage)
         self.Bind(wx.EVT_MENU, self.LargestClubs, self.largest_clubs)
         self.Bind(wx.EVT_MENU, self.ClubNumber, self.number_clubs)
@@ -218,7 +216,6 @@ class TwoClubViewer(wx.Frame):
         self.nb_club_info.AddPage(self.panel_vis, 'Visualisation')
         self.nb_club_info.AddPage(self.panel_diff, 'Compare')
 
-
         self.nb_clubs.AddPage(self.window_club_display, '2-Clubs')
 
         sizer_3.Add(self.nb_clubs, 1, wx.EXPAND, 0)
@@ -228,7 +225,7 @@ class TwoClubViewer(wx.Frame):
         self.SetSizer(sizer_all)
         sizer_all.Fit(self)
         self.Layout()
-        #self.window_club_display.SetSashPosition(256)
+        self.window_club_display.SetSashPosition(256)
         self.window_all.SetSashPosition(256)
 
     def OnClose(self, e):
@@ -356,6 +353,7 @@ class TwoClubViewer(wx.Frame):
         self.clb_nodes.DeselectAll()
         self.selected_nodes = set([])
         self.club_contents = []
+        self.DisplayAll()
 
     def DisplayAll(self):
         # Display all 2-clubs
@@ -570,7 +568,11 @@ class TwoClubViewer(wx.Frame):
             clubs['ALL'] &= clubs[node]
             clubs['ANY'] |= clubs[node]
 
-        for node in nodes + ['ALL', 'ANY']:
+        display_nodes = nodes
+        if len(nodes) > 1:
+            display_nodes += ['ALL', 'ANY']
+
+        for node in display_nodes:
             count = dict()
             for club_type in CLUB_TYPES:
                 count[club_type] = 0
@@ -710,6 +712,8 @@ class ClubListCtrlPanel(wx.Panel, listmix.ColumnSorterMixin):
 class ClubGrid(gridlib.Grid): ##, mixins.GridAutoEditMixin):
     def __init__(self, parent, data):
         gridlib.Grid.__init__(self, parent, -1)
+        wx.EVT_KEY_DOWN(self, self.OnKey)
+
         self.moveTo = None
         self.CreateGrid(len(data) - 1, len(data[0]))#, gridlib.Grid.SelectRows)
         self.EnableEditing(False)
@@ -723,6 +727,52 @@ class ClubGrid(gridlib.Grid): ##, mixins.GridAutoEditMixin):
 
         self.SetRowLabelSize(0)
         self.SetColLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_BOTTOM)
+        self.AutoSizeColumns()
+
+    def OnKey(self, event):
+        # If Ctrl+C is pressed...
+        if event.ControlDown() and event.GetKeyCode() == 67:
+            self.copy()
+
+        # If Ctrl+V is pressed...
+        if event.ControlDown() and event.GetKeyCode() == 86:
+            pass
+
+        # Skip other Key events
+        if event.GetKeyCode():
+            event.Skip()
+            return
+
+    def copy(self):
+        # Number of rows and cols
+        rows = self.GetSelectionBlockBottomRight()[0][0] - self.GetSelectionBlockTopLeft()[0][0] + 1
+        cols = self.GetSelectionBlockBottomRight()[0][1] - self.GetSelectionBlockTopLeft()[0][1] + 1
+
+        # data variable contain text that must be set in the clipboard
+        data = ''
+
+        # For each cell in selected range append the cell value in the data variable
+        # Tabs '\t' for cols and '\r' for rows
+        for r in range(rows):
+            for c in range(cols):
+                data = data + str(self.GetCellValue(self.GetSelectionBlockTopLeft()[0][0] + r, self.GetSelectionBlockTopLeft()[0][1] + c))
+                if c < cols - 1:
+                    data = data + '\t'
+            data = data + '\n'
+
+        # Create text data object
+        clipboard = wx.TextDataObject()
+
+        # Set data object value
+        clipboard.SetText(data)
+
+        # Put the data in the clipboard
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(clipboard)
+            wx.TheClipboard.Close()
+        else:
+            wx.MessageBox("Can't open the clipboard", "Error")
+
 
 class DiffPanel(wx.Panel):
     def __init__(self, *args, **kwds):
