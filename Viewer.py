@@ -67,7 +67,7 @@ class TwoClubViewer(wx.Frame):
         self.file.AppendItem(self.quit)
 
         self.edit = wx.Menu()
-        self.select_none = wx.MenuItem( self.edit, wx.NewId(), 'Select &None\tCtrl-Shift-A', 'Deselect all nodes', wx.ITEM_NORMAL)
+        self.select_none = wx.MenuItem( self.edit, wx.NewId(), 'Deselect &Nodes\tCtrl-Shift-A', 'Deselect all nodes', wx.ITEM_NORMAL)
         self.change_threshold = wx.MenuItem(self.edit, wx.NewId(), 'Change &Threshold', 'Change the nontrivial-threshold', wx.ITEM_NORMAL)
         self.edit.AppendItem(self.select_none)
         self.edit.AppendItem(self.change_threshold)
