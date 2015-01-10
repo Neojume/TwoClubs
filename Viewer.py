@@ -20,7 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 
 import wx
 import wx.lib.mixins.listctrl as listmix
-import  wx.grid as gridlib
+import wx.grid as gridlib
 
 import os
 import sys
@@ -37,7 +37,9 @@ from matplotlib.backends.backend_wxagg import \
 
 from Util import TYPE_COTERIE_SEP, TYPE_COTERIE_NONSEP, TYPE_SOCIAL_CIRCLE, TYPE_HAMLET, CLUB_TYPES
 
-VERSION = '5.1'
+MAJOR = 0
+MINOR = 5
+PATCH = 2
 
 class TwoClubViewer(wx.Frame):
 
@@ -74,8 +76,8 @@ class TwoClubViewer(wx.Frame):
 
         self.tools = wx.Menu()
         self.coverage = wx.MenuItem(self.tools, wx.NewId(), 'Coverage table', 'Create the coverage table for the different types', wx.ITEM_NORMAL)
-        self.largest_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Largest clubs', 'Show largest clubs and maximum degrees', wx.ITEM_NORMAL)
-        self.number_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Number of club types', 'Show the number of different club types', wx.ITEM_NORMAL)
+        self.largest_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Largest Clubs', 'Show largest clubs and maximum degrees', wx.ITEM_NORMAL)
+        self.number_clubs = wx.MenuItem(self.tools, wx.NewId(), 'Number of Club types', 'Show the number of different club types', wx.ITEM_NORMAL)
         self.nodes_info = wx.MenuItem(self.tools, wx.NewId(), 'Selected nodes info', 'Show info about the 2-clubs of the selected nodes', wx.ITEM_NORMAL)
         self.tools.AppendItem(self.coverage)
         self.tools.AppendItem(self.largest_clubs)
@@ -83,11 +85,13 @@ class TwoClubViewer(wx.Frame):
         self.tools.AppendItem(self.nodes_info)
 
         self.view = wx.Menu()
-        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View trivials', 'Show the nontrivial 2-clubs in the list', wx.ITEM_CHECK)
+        self.view_nontrivials = wx.MenuItem(self.edit, wx.NewId(), 'View trivials', 'Show the nontrivial 2-Clubs in the list', wx.ITEM_CHECK)
         self.view.AppendItem(self.view_nontrivials)
         self.view_nontrivials.Check()
 
         self.help = wx.Menu()
+        self.about = wx.MenuItem(self.help, wx.NewId(), 'About', 'About this version of the Viewer', wx.ITEM_NORMAL)
+        self.help.AppendItem(self.about)
 
         self.menubar.Append(self.file, '&File')
         self.menubar.Append(self.edit, '&Edit')
@@ -168,6 +172,7 @@ class TwoClubViewer(wx.Frame):
         self.Bind(wx.EVT_MENU, self.NodesInfo, self.nodes_info)
         self.Bind(wx.EVT_MENU, self.OnThresholdChange, self.change_threshold)
         self.Bind(wx.EVT_MENU, self.OnCheckbox, self.view_nontrivials)
+        self.Bind(wx.EVT_MENU, self.OnAbout, self.about)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnNodeSelect, self.clb_nodes)
         #self.Bind( wx.EVT_LIST_ITEM_ACTIVATED, self.OnNodeSelect, self.clb_nodes )
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged, self.notebook_BN)
@@ -326,7 +331,7 @@ class TwoClubViewer(wx.Frame):
         for t in CLUB_TYPES:
             if self.display_cbs[t].Get3StateValue() == wx.CHK_CHECKED:
                 for club_id in self.display_clubs[t]:
-                    size = len(self.all_info['all_clubs'][int( club_id )])
+                    size = len(self.all_info['all_clubs'][int(club_id)])
                     if self.view_nontrivials.IsChecked() or size >= self.nt_threshold:
                         data_dict[int(club_id)] = [club_id, str(size), t]
         self.lc_clubs.ChangeData(data_dict)
@@ -376,7 +381,7 @@ class TwoClubViewer(wx.Frame):
 
         avg_degree = 2.0 * self.all_info['graph'].number_of_edges() / self.all_info['graph'].number_of_nodes()
 
-        dlg = wx.TextEntryDialog(None, 'Enter the nontrivial-threshold. A 2-club that consists of at least of that number of nodes, is considered nontrivial.', "NonTrivial Threshold", str(avg_degree))
+        dlg = wx.TextEntryDialog(None, 'Enter the nontrivial-threshold. A 2-Club that consists of at least of that number of nodes, is considered nontrivial. Default value is the average degree.', "NonTrivial Threshold", str(avg_degree))
 
         answer = dlg.ShowModal()
 
@@ -391,12 +396,12 @@ class TwoClubViewer(wx.Frame):
 
     def DrawClub(self, club_id):
         '''
-        Draws the selected 2-club in the graph window.
+        Draws the selected 2-Club in the graph window.
 
         Parameters
         ----------
         club_id : int
-            The id of the 2-club to draw.
+            The id of the 2-Club to draw.
         '''
 
         data = self.all_info
@@ -589,7 +594,9 @@ class TwoClubViewer(wx.Frame):
         f.Layout()
         f.Show(True)
 
-# end of class TwoClubViewer
+    def OnAbout(self, e):
+        wx.MessageBox('2-Club Viewer\nVersion %d.%d.%d\n\nGNU Public Licence\nBy Steven Laan' % (MAJOR, MINOR, PATCH), 'Info', wx.OK | wx.ICON_INFORMATION)
+
 
 class CheckListCtrl( wx.ListCtrl, listmix.CheckListCtrlMixin ):
     def __init__(self, parent):
